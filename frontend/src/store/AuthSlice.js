@@ -10,11 +10,12 @@ export const logIn = createAsyncThunk('auth/logIn', async (data, thunkAPI) => {
       }
     );
     const res = await req.json();
-    if (res.length !== 0) {
+    if (res.user.length !== 0) {
       if (res.message) {
         return false;
       } else {
-        dispatch(setUserInfo(res[0]));
+        localStorage.setItem('token', res.token);
+        dispatch(setUserInfo(res.user[0]));
         return true;
       }
     } else {
@@ -38,11 +39,11 @@ export const signUp = createAsyncThunk(
         },
       });
       const res = await req.json();
-      if (res.length !== 0) {
+      if (res.user.length !== 0) {
         if (res.message) {
           return false;
         } else {
-          dispatch(setUserInfo(res[0]));
+          dispatch(setUserInfo(res.user));
           return true;
         }
       } else {
@@ -101,6 +102,7 @@ const AuthSlice = createSlice({
     registered: false,
     profileImg: null,
     favourite: [],
+    favouriteIcon: null,
   },
   reducers: {
     setUserInfo: (state, action) => {
@@ -109,6 +111,7 @@ const AuthSlice = createSlice({
 
     logout: (state) => {
       state.registered = false;
+      state.user = [];
     },
 
     // Signup set Profile image
@@ -124,6 +127,11 @@ const AuthSlice = createSlice({
     // change profile pic from ProfileInfo
     changeProfile: (state, action) => {
       state.profileImg = action.payload;
+    },
+
+    // change favourite icon
+    changeFavouriteIcon: (state) => {
+      state.favouriteIcon = !state.favouriteIcon;
     },
   },
   extraReducers: (builder) => {
@@ -150,4 +158,5 @@ export const { setUserInfo } = AuthSlice.actions;
 export const { logout } = AuthSlice.actions;
 export const { setProfileImg } = AuthSlice.actions;
 export const { changeProfile } = AuthSlice.actions;
+export const { changeFavouriteIcon } = AuthSlice.actions;
 export default AuthSlice.reducer;

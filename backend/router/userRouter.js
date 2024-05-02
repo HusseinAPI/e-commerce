@@ -1,8 +1,10 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const userRouter = express.Router();
 const User = require('../models/userModel');
+const SECRET_KEY = 'bbajcbansiajsjks';
 
 // Check User
 
@@ -15,17 +17,26 @@ userRouter.get('/:email/:password', async (req, res) => {
 
     if (user.length !== 0) {
       const passwordMatch = await bcrypt.compare(password, user[0].password);
-
       if (passwordMatch) {
-        res.cookie('email', email);
-        res.cookie(' password', password);
-        res.status(200).json(user);
+        const token = jwt.sign(
+          {
+            id: user._id,
+          },
+          SECRET_KEY
+        );
+
+        res.status(200).json({ token, user });
       }
     }
   } catch (error) {
     res.status(400).json({ message: 'Wrong Email or Password' });
   }
 });
+
+// router.get('/profile', jwt, (req, res) => {
+//   // Access authenticated user information from req.user
+//   res.send(`Welcome to your profile, user ${req.user.userId}!`);
+// });
 
 // Add User
 
@@ -87,6 +98,7 @@ userRouter.put('/', async (req, res) => {
 
       return res.status(200).json(items);
     }
+
     const findFilter = {
       _id: req.body.id,
       'favourite._id': req.body.product._id,
@@ -95,15 +107,22 @@ userRouter.put('/', async (req, res) => {
     //find before update
     const itemExist = await User.find(findFilter);
 
-    if (itemExist.length !== 0) {
-      return res.status(200).json({ message: 'item already added' });
-    }
-
+    // User filter
     const filter = { _id: req.body.id };
-    const update = { $push: { favourite: req.body.product } };
 
-    // update favourite field
-    await User.updateOne(filter, update);
+    if (itemExist.length !== 0) {
+      // delete from favourite field
+
+      const update = { $pull: { favourite: req.body.product } };
+
+      await User.updateOne(filter, update);
+    } else {
+      // add to favourite field
+
+      const update = { $push: { favourite: req.body.product } };
+
+      await User.updateOne(filter, update);
+    }
 
     // find after update
     const favouriteItemsUser = await User.find(filter);

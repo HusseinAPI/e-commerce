@@ -8,7 +8,7 @@ import {
 import { IoMdHeartEmpty } from 'react-icons/io';
 import { FaHeart } from 'react-icons/fa6';
 import { showProductDetails, visionProductCart } from '../store/ShopSlice';
-import { setFavourite } from '../store/AuthSlice';
+import { changeFavouriteIcon, setFavourite } from '../store/AuthSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Vision from '../components/Vision';
@@ -16,7 +16,9 @@ import Vision from '../components/Vision';
 const Products = () => {
   const { user } = useSelector((state) => state.AuthSlice);
   const { products } = useSelector((state) => state.ShopSlice);
+  const { favouriteIcon } = useSelector((state) => state.AuthSlice);
   const { vision } = useSelector((state) => state.ShopSlice);
+  const { favourite } = useSelector((state) => state.AuthSlice);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -27,6 +29,17 @@ const Products = () => {
       product: element,
     };
     dispatch(setFavourite(data));
+    // dispatch(changeFavouriteIcon(element));
+
+    products.forEach((elem) => {
+      favourite.forEach((el) => {
+        if (elem._id === el._id) {
+          dispatch(changeFavouriteIcon());
+        } else {
+          console.log('not favourite');
+        }
+      });
+    });
   };
 
   return (
@@ -48,13 +61,18 @@ const Products = () => {
                     onClick={() => navigate('/product')}
                   />
                   <div>
-                    {elem.favourite ? (
-                      <IoMdHeartEmpty
+                    {favouriteIcon ? (
+                      <FaHeart
                         className="product-icons"
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          marginLeft: '2px',
+                        }}
                         onClick={() => setFavouriteHandler(elem)}
                       />
                     ) : (
-                      <FaHeart
+                      <IoMdHeartEmpty
                         className="product-icons"
                         onClick={() => setFavouriteHandler(elem)}
                       />
