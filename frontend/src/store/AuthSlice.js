@@ -3,19 +3,19 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 export const logIn = createAsyncThunk('auth/logIn', async (data, thunkAPI) => {
   const { rejectWithValue, dispatch } = thunkAPI;
   try {
-    const req = await fetch(
-      `http://localhost:3001/users/${data.email}/${data.password}`,
-      {
-        method: 'GET',
-      }
-    );
+    const req = await fetch(`http://localhost:3001/users/signin`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-type': 'application/json; charset=UTF-8',
+      },
+    });
     const res = await req.json();
-    if (res.user.length !== 0) {
+    if (res.length !== 0) {
       if (res.message) {
         return false;
       } else {
-        localStorage.setItem('token', res.token);
-        dispatch(setUserInfo(res.user[0]));
+        dispatch(setUserInfo(res));
         return true;
       }
     } else {
@@ -31,7 +31,7 @@ export const signUp = createAsyncThunk(
   async (data, thunkAPI) => {
     const { rejectWithValue, dispatch } = thunkAPI;
     try {
-      const req = await fetch('http://localhost:3001/users', {
+      const req = await fetch('http://localhost:3001/users/signup', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
@@ -39,11 +39,11 @@ export const signUp = createAsyncThunk(
         },
       });
       const res = await req.json();
-      if (res.user.length !== 0) {
+      if (res.length !== 0) {
         if (res.message) {
           return false;
         } else {
-          dispatch(setUserInfo(res.user));
+          dispatch(setUserInfo(res));
           return true;
         }
       } else {
@@ -60,11 +60,12 @@ export const updateUserInfo = createAsyncThunk(
   async (data, thunkAPI) => {
     const { rejectWithValue } = thunkAPI;
     try {
-      const req = await fetch(`http://localhost:3001/users/${data.email}`, {
+      const req = await fetch(`http://localhost:3001/users/${data.userId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
         headers: {
           'Content-type': 'application/json; charset=UTF-8',
+          Authorization: `Bearer${data.token}`,
         },
       });
       const res = await req.json();
@@ -102,7 +103,6 @@ const AuthSlice = createSlice({
     registered: false,
     profileImg: null,
     favourite: [],
-    favouriteIcon: null,
   },
   reducers: {
     setUserInfo: (state, action) => {
@@ -127,11 +127,6 @@ const AuthSlice = createSlice({
     // change profile pic from ProfileInfo
     changeProfile: (state, action) => {
       state.profileImg = action.payload;
-    },
-
-    // change favourite icon
-    changeFavouriteIcon: (state) => {
-      state.favouriteIcon = !state.favouriteIcon;
     },
   },
   extraReducers: (builder) => {
@@ -158,5 +153,4 @@ export const { setUserInfo } = AuthSlice.actions;
 export const { logout } = AuthSlice.actions;
 export const { setProfileImg } = AuthSlice.actions;
 export const { changeProfile } = AuthSlice.actions;
-export const { changeFavouriteIcon } = AuthSlice.actions;
 export default AuthSlice.reducer;

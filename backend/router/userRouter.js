@@ -1,32 +1,40 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const cookieParser = require('cookie-parser');
+import express from 'express';
+import bcrypt from 'bcrypt';
+import cookieParser from 'cookie-parser';
 const userRouter = express.Router();
-const User = require('../models/userModel');
-const SECRET_KEY = 'bbajcbansiajsjks';
+import User from '../models/userModel.js';
+import { generateToken, isAuth } from '../jwt.js';
 
-// Check User
+// Sign In
 
 userRouter.use(cookieParser());
 
-userRouter.get('/:email/:password', async (req, res) => {
+userRouter.post('/signin', async (req, res) => {
   try {
-    const { email, password } = req.params;
-    const user = await User.find({ email });
+    const { email, password } = req.body;
+    const userExist = await User.find({ email });
 
-    if (user.length !== 0) {
-      const passwordMatch = await bcrypt.compare(password, user[0].password);
+    if (userExist) {
+      const passwordMatch = await bcrypt.compare(
+        password,
+        userExist[0].password
+      );
+
       if (passwordMatch) {
-        const token = jwt.sign(
-          {
-            id: user._id,
-          },
-          SECRET_KEY
-        );
-
-        res.status(200).json({ token, user });
+        const user = {
+          _id: userExist[0]._id,
+          fullName: userExist[0].fullName,
+          email: userExist[0].email,
+          profileImg: userExist[0].profileImg,
+          token: generateToken({
+            _id: userExist[0]._id,
+            email: userExist[0].email,
+          }),
+        };
+        res.status(200).json(user);
       }
+    } else {
+      res.status(404).json({ message: 'User not Found' });
     }
   } catch (error) {
     res.status(400).json({ message: 'Wrong Email or Password' });
@@ -38,9 +46,9 @@ userRouter.get('/:email/:password', async (req, res) => {
 //   res.send(`Welcome to your profile, user ${req.user.userId}!`);
 // });
 
-// Add User
+// Sign Up
 
-userRouter.post('/', async (req, res) => {
+userRouter.post('/signup', async (req, res) => {
   try {
     const validEmail = await User.find({ email: req.body.email });
 
@@ -55,8 +63,20 @@ userRouter.post('/', async (req, res) => {
       };
 
       const newUser = await User(userData);
-      res.status(201).json(newUser);
       newUser.save();
+
+      const user = {
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        profileImg: newUser.profileImg,
+        token: generateToken({
+          _id: newUser._id,
+          email: newUser.email,
+        }),
+      };
+
+      res.status(201).json(user);
     }
   } catch (error) {
     res.status(404).json({ message: 'Email Not Valid' });
@@ -65,21 +85,35 @@ userRouter.post('/', async (req, res) => {
 
 // Update user information
 
-userRouter.put('/:email', async (req, res) => {
+userRouter.put('/:userId', isAuth, async (req, res) => {
   try {
-    const { email } = req.params;
-    const validEmail = await User.find({ email });
+    const { userId } = req.params;
+    const userExist = await User.find({ _id: userId });
 
-    if (validEmail.length !== 0) {
+    if (userExist.length !== 0) {
       const updateUserData = {
+        email: req.body.email,
         profileImg: req.body.profileImg,
         fullName: req.body.fullName,
         phone: req.body.phone,
         postalCode: req.body.postalCode,
         address: req.body.address,
       };
-      const userUpdate = await User.updateOne({ email }, updateUserData);
-      res.status(201).json(userUpdate);
+      const userUpdate = await User.updateOne({ _id: userId }, updateUserData);
+
+      if (userUpdate.modifiedCount) {
+        const userUpdated = {
+          _id: req.body.userId,
+          email: req.body.email,
+          profileImg: req.body.profileImg,
+          fullName: req.body.fullName,
+          phone: req.body.phone,
+          postalCode: req.body.postalCode,
+          address: req.body.address,
+          token: req.body.token,
+        };
+        res.status(200).json(userUpdated);
+      }
     }
   } catch (error) {
     res.status(400).json({ message: 'check your connection and try again' });
@@ -134,4 +168,4 @@ userRouter.put('/', async (req, res) => {
   }
 });
 
-module.exports = userRouter;
+export default userRouter;

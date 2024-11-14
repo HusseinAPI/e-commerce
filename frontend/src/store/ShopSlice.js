@@ -17,6 +17,25 @@ export const getProducts = createAsyncThunk(
   }
 );
 
+export const setFavouriteZerOne = createAsyncThunk(
+  'shop/setFavouriteZerOne',
+  async (product, thunkAPI) => {
+    const { rejectWithValue, dispatch } = thunkAPI;
+    try {
+      await fetch('http://localhost:3001/products', {
+        method: 'PUT',
+        body: JSON.stringify(product),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        },
+      });
+      dispatch(getProducts);
+    } catch (error) {
+      rejectWithValue(error.message);
+    }
+  }
+);
+
 const ShopSlice = createSlice({
   name: 'shop',
   initialState: {

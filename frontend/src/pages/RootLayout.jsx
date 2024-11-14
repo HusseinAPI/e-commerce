@@ -8,7 +8,7 @@ import { getProducts } from '../store/ShopSlice';
 import { setFavourite } from '../store/AuthSlice';
 
 const RootLayout = () => {
-  const { user } = useSelector((state) => state.AuthSlice);
+  const user = useSelector((state) => state.AuthSlice.user);
 
   const dispatch = useDispatch();
 

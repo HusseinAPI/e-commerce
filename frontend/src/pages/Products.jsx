@@ -7,8 +7,12 @@ import {
 } from 'react-icons/ai';
 import { IoMdHeartEmpty } from 'react-icons/io';
 import { FaHeart } from 'react-icons/fa6';
-import { showProductDetails, visionProductCart } from '../store/ShopSlice';
-import { changeFavouriteIcon, setFavourite } from '../store/AuthSlice';
+import {
+  showProductDetails,
+  visionProductCart,
+  setFavouriteZerOne,
+} from '../store/ShopSlice';
+import { setFavourite } from '../store/AuthSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Vision from '../components/Vision';
@@ -16,17 +20,17 @@ import Vision from '../components/Vision';
 const Products = () => {
   const { user } = useSelector((state) => state.AuthSlice);
   const { products } = useSelector((state) => state.ShopSlice);
-  const { favouriteIcon } = useSelector((state) => state.AuthSlice);
   const { vision } = useSelector((state) => state.ShopSlice);
   const { favourite } = useSelector((state) => state.AuthSlice);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const setFavouriteHandler = (element) => {
+  const setFavouriteHandler = (element, answer) => {
     const data = {
       id: user._id,
       product: element,
+      favourite: answer,
     };
     dispatch(setFavourite(data));
     // dispatch(changeFavouriteIcon(element));
@@ -34,11 +38,13 @@ const Products = () => {
     products.forEach((elem) => {
       favourite.forEach((el) => {
         if (elem._id === el._id) {
-          dispatch(changeFavouriteIcon());
+          dispatch(setFavouriteZerOne(data));
+          console.log('true');
         } else {
-          console.log('not favourite');
+          console.log('faalse');
         }
       });
+      console.log('end');
     });
   };
 
@@ -61,7 +67,7 @@ const Products = () => {
                     onClick={() => navigate('/product')}
                   />
                   <div>
-                    {favouriteIcon ? (
+                    {products.favourite ? (
                       <FaHeart
                         className="product-icons"
                         style={{
@@ -69,12 +75,12 @@ const Products = () => {
                           height: '18px',
                           marginLeft: '2px',
                         }}
-                        onClick={() => setFavouriteHandler(elem)}
+                        onClick={() => setFavouriteHandler(elem, false)}
                       />
                     ) : (
                       <IoMdHeartEmpty
                         className="product-icons"
-                        onClick={() => setFavouriteHandler(elem)}
+                        onClick={() => setFavouriteHandler(elem, true)}
                       />
                     )}
                     <LuEye

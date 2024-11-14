@@ -6,6 +6,7 @@ import { setProfileImg, updateUserInfo } from '../../store/AuthSlice';
 
 const Profile = () => {
   const { profileImg } = useSelector((state) => state.AuthSlice);
+  const user = useSelector((state) => state.AuthSlice.user);
 
   const fullName = useRef();
   const email = useRef();
@@ -24,12 +25,14 @@ const Profile = () => {
       address.current.value.length !== 0
     ) {
       const data = {
+        userId: user._id,
         profileImg: profileImg,
         fullName: fullName.current.value,
         email: email.current.value,
         phone: phone.current.value,
         postalCode: postalCode.current.value,
         address: address.current.value,
+        token: user.token,
       };
       dispatch(updateUserInfo(data));
       fullName.current.value = '';
